@@ -8,6 +8,9 @@ import com.rancard.eventmanagement.app.model.User;
 import com.rancard.eventmanagement.app.repository.EventRepository;
 import com.rancard.eventmanagement.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +31,7 @@ public class EventService {
         return userRepository.findByUsername(username).orElseThrow();
     }
 
+    @CacheEvict(value = { "events", "insights" }, allEntries = true)
     public EventResponse createEvent(EventRequest request) {
         Event event = new Event();
         event.setTitle(request.getTitle());
@@ -42,6 +46,7 @@ public class EventService {
         return response;
     }
 
+    @CacheEvict(value = { "events", "insights" }, allEntries = true)
     public EventResponse updateEvent(Long id, EventRequest request) {
         Event event = eventRepository.findById(id).orElseThrow();
         if (!event.getOwner().getUsername().equals(getCurrentUser().getUsername())) {
@@ -58,6 +63,7 @@ public class EventService {
 
     }
 
+    @CacheEvict(value = { "events", "insights" }, allEntries = true)
     public void deleteEvent(Long id) {
         Event event = eventRepository.findById(id).orElseThrow();
         if (!event.getOwner().getUsername().equals(getCurrentUser().getUsername())) {
@@ -66,6 +72,7 @@ public class EventService {
         eventRepository.delete(event);
     }
 
+    @Cacheable("events")
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll()
                 .stream().map(this::mapToResponse)
