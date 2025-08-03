@@ -1,12 +1,5 @@
 package com.rancard.eventmanagement.app.service;
 
-//import com.example.ticketing.dto.EventRequest;
-//import com.example.ticketing.dto.EventResponse;
-//import com.example.ticketing.dto.TicketResponse;
-//import com.example.ticketing.model.Event;
-//import com.example.ticketing.model.User;
-//import com.example.ticketing.repository.EventRepository;
-//import com.example.ticketing.repository.UserRepository;
 import com.rancard.eventmanagement.app.dto.EventRequest;
 import com.rancard.eventmanagement.app.dto.EventResponse;
 import com.rancard.eventmanagement.app.dto.TicketResponse;
@@ -28,6 +21,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final TicketService ticketService;
+    private final SseService sseService;
 
     private User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -42,8 +36,10 @@ public class EventService {
         event.setEndDate(request.getEndDate());
         event.setOwner(getCurrentUser());
         Event saved = eventRepository.save(event);
-
-        return mapToResponse(saved);
+        // return mapToResponse(saved);
+        EventResponse response = mapToResponse(saved);
+        sseService.sendUpdate(response);
+        return response;
     }
 
     public EventResponse updateEvent(Long id, EventRequest request) {
@@ -55,7 +51,11 @@ public class EventService {
         event.setDescription(request.getDescription());
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
-        return mapToResponse(eventRepository.save(event));
+        // return mapToResponse(eventRepository.save(event));
+        EventResponse response = mapToResponse(eventRepository.save(event));
+        sseService.sendUpdate(response);
+        return response;
+
     }
 
     public void deleteEvent(Long id) {
